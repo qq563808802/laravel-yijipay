@@ -1,5 +1,5 @@
 {
-    "name": "yeepay/laravel-yijipay",
+    "name": "yijipay/laravel-yijipay",
     "description": "易极付支付接口",
     "email": "wangzhoudong@foxmail.com",
     "type": "library",
