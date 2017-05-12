@@ -81,7 +81,7 @@ class Log
      */
     private static function createDefaultLogger()
     {
-        $log = new Logger('YeePay');
+        $log = new Logger('Yijipay');
 
         if (defined('PHPUNIT_RUNNING')) {
             $log->pushHandler(new NullHandler());

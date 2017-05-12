@@ -7,17 +7,16 @@
  *
  */
 
-namespace YeePay\YeePay\Facades;
+namespace Yijipay\Yijipay\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use YeePay\Contracts\YeePayInterface;
 
 /**
  * This is the Commodity facade class.
  *
  * @author Wangzd <wangzhoudong@foxmail.com>
  */
-class YeePay extends Facade
+class Yijipay extends Facade
 {
     /**
      * Get the registered name of the component.
@@ -31,7 +30,7 @@ class YeePay extends Facade
      */
     static public function getFacadeAccessor()
     {
-        return "yeepay";
+        return "yijipay";
     }
 
     /**

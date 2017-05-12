@@ -25,7 +25,11 @@ return [
 
     //网关
     //'gatewayUrl' => "https://api.yiji.com/gateway.html" //生产环境
-    'gatewayUrl' => "https://openapi.yijifu.net/gateway.html"	//测试环境
+    'gatewayUrl' => "https://openapi.yijifu.net/gateway.html",	//测试环境
+
+    'seller_id' => 'ptsu1234567',//卖家商户平台上的会员Id
+    'seller_name' => '商户名称',//卖家商户平台上的会员名称
+    /**
     /**
      * 日志配置
      *
@@ -34,8 +38,8 @@ return [
      * file：日志文件位置(绝对路径!!!)，要求可写权限
      */
     'log' => [
-        'level' => env('YEEPAY_LOG_LEVEL', 'debug'),
-        'file'  => env('YEEPAY_LOG_FILE', storage_path('logs/yeepay.log')),
+        'level' => env('YIJIPAY_LOG_LEVEL', 'debug'),
+        'file'  => env('YIJIPAY_LOG_FILE', storage_path('logs/yijipay.log')),
     ],
 
 ];

@@ -1,10 +1,10 @@
 <?php
-namespace Yijipay\Http;
+namespace Yijipay\Yijipay\Http;
 
-if (version_compare("5.5", PHP_VERSION, ">")) die("PHP 5.5 or greater is required!!!");
-
-use Yijipay\message\IRequest;
+use Yijipay\Yijipay\Http\IRequest;
 use Exception;
+use Yijipay\Yijipay\Util\SignHelper;
+use Yijipay\Yijipay\Util\Log;
 
 class YijipayClient {
 
@@ -12,6 +12,8 @@ class YijipayClient {
 	private $gatewayUrl = "https://api.yiji.com/gateway.html";
 	private $partnerId;
 	private $md5Key;
+
+	protected $config;
 
 	private $fileCharset = "UTF-8";
 	private $postCharset = "UTF-8";
@@ -23,11 +25,7 @@ class YijipayClient {
 	 * @param $config array
 	 */
 	function __construct($config) {
-		//检查参数是否设置
-		if(!is_array($config)) die("请检查参数是否array.");
-		if(!array_key_exists("partnerId", $config) || SignHelper::checkEmpty($config["partnerId"])) die("请检查config是否配置参数[partnerId]");
-		if(!array_key_exists("md5Key", $config) || SignHelper::checkEmpty($config["md5Key"])) die("请检查config是否配置参数[md5Key]");
-
+		$this->config = $config;
 		$this->partnerId 	= $config["partnerId"];
 		$this->md5Key 		= $config["md5Key"];
 		$this->gatewayUrl 	= $config["gatewayUrl"];
@@ -53,14 +51,12 @@ class YijipayClient {
 		$preSignStr = SignHelper::getPreSignStr($request);
 		$sign = SignHelper::sign($preSignStr, $this->md5Key, $request->getSignType());
 		$signStr = $preSignStr . "&sign=" . $sign;
-		echo "<br/>".$preSignStr."<br/>";
 
 		$this->writeLog("原始请求(未加密)：". $preSignStr);
 		$this->writeLog("原始请求sign：". $sign);
 
 		//系统参数放入QueryString请求串
 		$requestUrl = $this->gatewayUrl . "?" . $signStr;
-
 		//发起HTTP请求
 		try {
 			$resp = $this->curl($requestUrl);
@@ -167,17 +163,20 @@ class YijipayClient {
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('content-type: application/x-www-form-urlencoded;charset=' . $this->postCharset));
 
 		$response = curl_exec($ch);
-
 		if (curl_errno($ch)) {
 			throw new Exception(curl_error($ch), 0);
 		} else {
 			$httpStatusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
 			if (302 === $httpStatusCode){
 				$headers302 = curl_getinfo($ch);
-				$response = $headers302['redirect_url'];
+				$reUrl = parse_url($headers302['redirect_url']);
+				parse_str($reUrl['query'],$query);
+				if(isset($query['success']) && $query['success'] === 'false') {
+					throw new Exception($query['resultMessage'], 0);
+				}
+				return $headers302['redirect_url'];
 				//?直接跳转
-				header("location:". $response);
-				exit;
 			}else if (200 !== $httpStatusCode) {
 				throw new Exception($response, $httpStatusCode);
 			}
@@ -192,11 +191,9 @@ class YijipayClient {
 	 * @param $text
 	 */
 	function writeLog($text) {
+		Log::debug($text);
 		return true;
-		if($this->debug){
-			echo "<br/>$text";
-		}
-		file_put_contents ( "log/log.txt", date ( "Y-m-d H:i:s" ) . "  " . $text . "<br/>\n", FILE_APPEND );
+
 	}
 
 	/**
@@ -215,7 +212,8 @@ class YijipayClient {
 			str_replace("\n", "", $responseTxt)
 		);
 		$text = implode("\t", $logData);
-		file_put_contents ( "log/comm_err.log", $text . "\n", FILE_APPEND );
+		Log::debug($text);
+		return true;
 	}
 
 	

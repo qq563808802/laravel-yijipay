@@ -12,14 +12,14 @@ use Symfony\Component\HttpFoundation\Request;
 use Yijipay\Yijipay\Util\Collection;
 use Yijipay\Yijipay\Util\Log;
 
-//use Yeepay\YeePay\Util\Log;
+//use Yijipay\Yijipay\Util\Log;
 
 /**
  * Class Application.
  *
 
  */
-class YeePay extends Container
+class Yijipay extends Container
 {
     /**
      * Service Providers.
@@ -28,6 +28,7 @@ class YeePay extends Container
      */
     protected $providers = [
        ServiceProviders\PayServiceProvider::class,
+       ServiceProviders\TransferServiceProvider::class,
     ];
 
     /**
@@ -146,7 +147,7 @@ class YeePay extends Container
             return;
         }
 
-        $logger = new Logger('yeepay');
+        $logger = new Logger('yijipay');
         if (!$this['config']['debug'] || defined('PHPUNIT_RUNNING')) {
             $logger->pushHandler(new NullHandler());
         } elseif ($logFile = $this['config']['log.file']) {

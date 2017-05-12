@@ -1,11 +1,11 @@
 <?php
-namespace YeePay\YeePay;
+namespace Yijipay\Yijipay;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Container\Container as Application;
 use Illuminate\Foundation\Application as LaravelApplication;
 
-class YeePayServiceProvider extends ServiceProvider {
+class YijipayServiceProvider extends ServiceProvider {
 
 	/**
 	 * Indicates if loading of the provider is deferred.
@@ -35,15 +35,15 @@ class YeePayServiceProvider extends ServiceProvider {
 	 */
 	protected function setupConfig(Application $app)
 	{
-		$source = realpath(__DIR__.'/../../config/yeepay.php');
+		$source = realpath(__DIR__.'/../../config/yijipay.php');
 
 		if ($app instanceof LaravelApplication && $app->runningInConsole()) {
-			$this->publishes([$source => config_path('yeepay.php')]);
+			$this->publishes([$source => config_path('yijipay.php')]);
 		} elseif ($app instanceof LumenApplication) {
-			$app->configure('yeepay');
+			$app->configure('yijipay');
 		}
 
-		$this->mergeConfigFrom($source, 'yeepay');
+		$this->mergeConfigFrom($source, 'yijipay');
 	}
 
 	/**
@@ -72,11 +72,11 @@ class YeePayServiceProvider extends ServiceProvider {
 	public function register()
 	{
 		$this->mergeConfigFrom(
-			__DIR__.'/../../config/yeepay.php', 'yeepay'
+			__DIR__.'/../../config/yijipay.php', 'yijipay'
 		);
 
-		$this->app->singleton('yeepay', function($app){
-			$app = new YeePay(config('yeepay'));
+		$this->app->singleton('yijipay', function($app){
+			$app = new Yijipay(config('yijipay'));
 
 			return $app;
 		});
@@ -90,6 +90,6 @@ class YeePayServiceProvider extends ServiceProvider {
 	 */
 	public function provides()
 	{
-		return [YeePay::class, 'yeepay'];
+		return [Yijipay::class, 'yijipay'];
 	}
 }

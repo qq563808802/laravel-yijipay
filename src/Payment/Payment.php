@@ -5,122 +5,113 @@
  * Date: 2017/4/7
  * Time: 18:36
  */
-namespace YeePay\Payment;
-use YeePay\YeePay\Exceptions\Exception;
-use YeePay\YeePay\Http\ApiRequest;
-use YeePay\YeePay\Util\Util;
-
-class Payment extends ApiRequest{
+namespace Yijipay\Payment;
+use Yijipay\Yijipay\Http\YijipayClient;
+use Yijipay\Yijipay\Exceptions\Exception;
+use Yijipay\Yijipay\Util\SignHelper;
 
 
-    /**
-     * 创建支付
-     */
-    const PAY_URL = '/pay';
-    static $payNeedRequestHmac = array(0 => "requestid", 1 => "amount", 2 => "assure", 3 => "productname", 4 => "productcat", 5 => "productdesc", 6 => "divideinfo", 7 => "callbackurl", 8 => "webcallbackurl", 9 => "bankid", 10 => "period", 11 => "memo");
-    static $payNeedResponseHmac = array(0 => "customernumber", 1 => "requestid", 2 => "code", 3 => "externalid", 4 => "amount", 5 => "payurl");
-    static $payRequest = array(0 => "requestid", 1 => "amount", 2 => "assure", 3 => "productname", 4 => "productcat", 5 => "productdesc", 6 => "divideinfo", 7 => "callbackurl", 8 => "webcallbackurl", 9 => "bankid", 10 => "period", 11 => "memo", 12 => "payproducttype", 13 => "userno", 14 => "ip", 15 => "cardname", 16 => "idcard", 17 => "bankcardnum",18=> "mobilephone",19 => "orderexpdate");
-    static $payMustFillRequest = ["requestid","amount","callbackurl"];
-    static $payNeedCallbackHmac = array(0 => "customernumber", 1 => "requestid", 2 => "code", 3 => "notifytype", 4 => "externalid", 5 => "amount", 6 => "cardno");
-    /**
-     * 查询支付
-     */
-    const QUERY_URL = '/queryOrder';
-    static $queryNeedRequestHmac =  array(0 => "requestid");
-    static $queryNeedResponseHmac =  array(0 => "customernumber", 1 => "requestid", 2 => "code", 3 => "externalid", 4 => "amount", 5 => "productname", 6 => "productcat", 7 => "productdesc", 8 => "status", 9 => "ordertype", 10 => "busitype", 11 => "orderdate", 12 => "createdate", 13 => "bankid");
-    static $queryRequest = array(0 => "requestid");
-
-    /**
-     * 转账接口
-     */
-    const TRANSFER_URL = '/transfer';
-    static $transferNeedRequestHmac = array(0 => "requestid", 1 => "ledgerno", 2 => "amount");
-    static $transferMustFillRequest = array(0 => "requestid", 1 => "amount");
-    static $transferRequest = array(0 => "requestid", 1 => "ledgerno", 2 => "amount");
-    static $transferNeedResponseHmac =  array(0 => "customernumber", 1 => "requestid", 2 => "code");
-
+class Payment extends YijipayClient{
 
     public function add($params = null)
     {
-        $this->setUrl(self::PAY_URL);
-        $this->setNeedRequest(self::$payRequest);
-        $this->setNeedRequestHmac(self::$payNeedRequestHmac);
-        $this->setNeedResponseHmac(self::$payNeedResponseHmac);
-        $this->setPost($params);
-        $response = $this->send();
+        $apiReqeust = new CreateRequest();
+        //请求公共部分
+        $apiReqeust->setReturnUrl( $params['return_url']);
+        $apiReqeust->setNotifyUrl($params['notify_url']);
+        //partnerId默认yijipay\config.php中已经配置
+        //$apiReqeust->setPartnerId($config['partnerId']); 
+        $apiReqeust->setMerchOrderNo($params['order_id']);
+        $apiReqeust->setOrderNo($params['order_id']);
+        //signType默认MD5
+        $apiReqeust->setSignType("MD5");
+        //$apiReqeust->setContext("");
+
+        //构建交易参数
+        $item1 = $this->genTradeInfo($params);
+        $apiReqeust->setBuyerOrgName($params['user_name']);
+
+        $apiReqeust->setTradeInfo([$item1]);
+
+
+        if(isset($params["payment_type"])) {
+            $apiReqeust->setPaymentType($params["payment_type"]);
+        }
+        //收银台参数
+        if(isset($params['terminal_type'])) {
+              $apiReqeust->setUserTerminalType("PC");
+         }
+//        SignHelper::getPreSignStr($apiReqeust);
+        //方式2: 获取重定向URL
+        $response = $this->execute($apiReqeust);
         return $response;
+
     }
+
 
     /**
      * 查询支付状态
+     *
+     * @param $orderNo  string|array
+     * @return mixed
+     * @throws Exception
+     * @throws \Exception
      */
     public function query($orderNo) {
-        $this->setUrl(self::QUERY_URL);
-        $this->setNeedRequest(self::$queryRequest);
-        $this->setNeedRequestHmac(self::$queryNeedRequestHmac);
-        $this->setNeedResponseHmac(self::$queryNeedResponseHmac);
-        $this->setPost(['requestid'=>$orderNo]);
-        $response = $this->send();
-        return $response;
-    }
+        $apiReqeust = new QueryRequest();
+        //请求公共部分
+        $apiReqeust->setReturnUrl(url('/'));
+        $apiReqeust->setNotifyUrl(url('/'));
+        $apiReqeust->setMerchOrderNo("T" . $this->genOrderNo());
+        $apiReqeust->setOrderNo("RID".  $this->genOrderNo());
+        $apiReqeust->setSignType("MD5");
+        if(is_array($orderNo)) {
+            $orderNo = implode(',',$orderNo);
+        }
+        $apiReqeust->setMerchantOrderNos($orderNo);
+        $response = $this->execute($apiReqeust);
+        $resp = json_decode($response);
+        if($this->verify($response) && $resp->success){
+            return $resp;
 
+        }else{
+
+            throw new Exception($resp->resultMessage);
+        }
+    }
 
     /**
-     * 转账接口
-     * @param $ledgerno
-     * @param $amount
+     * 回调
      */
-    public function transfer($ledgerno,$amount,$requestid = null) {
-        $requestid = $requestid ? $requestid : date("YmdHis") . rand(0000,9999);
-        $this->setUrl(self::TRANSFER_URL);
-        $this->setNeedRequest(self::$transferRequest);
-        $this->setNeedRequestHmac(self::$transferNeedRequestHmac);
-        $this->setNeedResponseHmac(self::$transferNeedResponseHmac);
-        $this->setMustFillRequest(self::$transferMustFillRequest);
-        $this->setPost(['requestid'=>$requestid,'ledgerno'=>$ledgerno,'amount'=>$amount]);
-        $response = $this->send();
-        return $response;
-    }
-
     public function callback() {
-        $data = request('data');
-        if(!$data) {
-            throw new Exception('没有数据');
+        $request = request()->all();
+        if($this->verify($request) && request('success')=== "true") {
+            return $request;
+        }else{
+            return false;
         }
-        $responseData = Util::getDeAes($data, $this->config['aesKey']);
-
-        $result = json_decode($responseData, true);
-        if ( "1" != $result["code"] ) {
-
-            throw new Exception("response error, errmsg = [" . $result["msg"] . "], errcode = [" . $result["code"] . "].", $result["code"]);
-        }
-
-        if ( array_key_exists("customError", $result)
-            && "" != $result["customError"] ) {
-
-            throw new Exception("response.customError error, errmsg = [" . $result["customError"] . "], errcode = [" . $result["code"] . "].", $result["code"]);
-        }
-
-        if ( $result["customernumber"] != $this->config['account'] ) {
-            throw new Exception("customernumber not equals, request is [" . $this->config['account'] . "], response is [" . $result["customernumber"] . "].");
-        }
-        $hmacData = [];
-        foreach ( self::$payNeedCallbackHmac as $hKey => $hValue ) {
-            $v = "";
-            //判断$queryData中是否存在此索引并且是否可访问
-            if ( Util::isViaArray($result, $hValue) && $result[$hValue] ) {
-
-                $v = $result[$hValue];
-            }
-
-            //取得对应加密的明文的值
-            $hmacData[$hKey] = $v;
-        }
-        $hmac = Util::getHmac($hmacData,$this->config['merchantPrivateKey']);
-        if($hmac !== $result['hmac']) {
-            throw new \Exception('hmac not equals');
-        }
-        return $result;
     }
 
+
+    private function genTradeInfo($params) {
+        $item1 = new TradeInfo();
+
+        $item1->setMerchOrderNo($params['order_id']);
+        $item1->setTradeName($params['subject']);
+//        $item1->setSellerUserId($this->config['partnerId']);
+        $item1->setSellerOrgName($this->config['seller_name']);
+
+        $item1->setTradeAmount($params['amount']);
+        $item1->setGoodsName($params['subject']);
+        $item1->setCurrency("CNY");
+
+
+
+        return $item1;
+    }
+
+
+    public function genOrderNo() {
+        return date("YmdHis") . rand(0000,9999);
+    }
 }

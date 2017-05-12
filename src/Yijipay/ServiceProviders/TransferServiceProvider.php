@@ -5,13 +5,12 @@ namespace Yijipay\Yijipay\ServiceProviders;
 
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
-use Yijipay\Yijipay\Http\IRequest;
-use Yijipay\Payment\Payment;
+use Yijipay\Transfer\Transfer;
 
 /**
  * Class MenuServiceProvider.
  */
-class PayServiceProvider implements ServiceProviderInterface
+class TransferServiceProvider implements ServiceProviderInterface
 {
     /**
      * Registers services on the given container.
@@ -23,8 +22,8 @@ class PayServiceProvider implements ServiceProviderInterface
      */
     public function register(Container $pimple)
     {
-        $pimple['pay'] = function ($pimple) {
-            return new Payment($pimple['config']);
+        $pimple['transfer'] = function ($pimple) {
+            return new Transfer($pimple['config']);
         };
     }
 }

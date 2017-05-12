@@ -1,8 +1,6 @@
 <?php
 namespace Yijipay\Yijipay\Util;
 
-if (version_compare("5.5", PHP_VERSION, ">")) die("PHP 5.5 or greater is required!!!");
-
 class SignHelper {
 
 	/**
@@ -77,13 +75,15 @@ class SignHelper {
 	 * @return string
 	 */
 	public static function getPreSignStr($data){
-		if(is_subclass_of($data, "yijipay\\message\\IRequest")){
+		if(is_subclass_of($data, "Yijipay\\Yijipay\\Http\\IRequest")){
 			$arr = $data->getVars();
 		}else{
 			$arr = $data;
 		}
+
 		$myArr = static::paramsFilter($arr);
 		$str = static::createLinkString($myArr);
+
 		return $str;
 	}
 

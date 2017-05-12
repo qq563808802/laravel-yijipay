@@ -6,7 +6,7 @@
  * (c) 2016 overtrue <i@overtrue.me>
  */
 
-namespace YeePay\YeePay\Exceptions;
+namespace Yijipay\Yijipay\Exceptions;
 
 use Exception as BaseException;
 
