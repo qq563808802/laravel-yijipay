@@ -81,4 +81,28 @@ class Transfer extends YijipayClient{
     public function genOrderNo() {
         return date("YmdHis") . rand(0000,9999);
     }
+
+    /**
+     * 获取银行
+     * @param null $code
+     * @return mixed
+     */
+    public function getBank($code=null) {
+        if($code) {
+            return Config::$bank[$code];
+        }
+        return Config::$bank;
+    }
+
+    /**
+     * 回调
+     */
+    public function callback() {
+        $request = request()->all();
+        if($this->verify($request) && request('success')=== "true") {
+            return $request;
+        }else{
+            return false;
+        }
+    }
 }

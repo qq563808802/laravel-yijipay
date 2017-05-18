@@ -85,7 +85,7 @@ class Payment extends YijipayClient{
      */
     public function callback() {
         $request = request()->all();
-        if($this->verify($request) && request('success')=== "true") {
+        if($this->verify($request) && request('success')=== "true" && request('fastPayStatus')==='FINISHED') {
             return $request;
         }else{
             return false;
@@ -98,7 +98,7 @@ class Payment extends YijipayClient{
 
         $item1->setMerchOrderNo($params['order_id']);
         $item1->setTradeName($params['subject']);
-//        $item1->setSellerUserId($this->config['partnerId']);
+        $item1->setSellerUserId($this->config['partnerId']);
         $item1->setSellerOrgName($this->config['seller_name']);
 
         $item1->setTradeAmount($params['amount']);
@@ -114,4 +114,6 @@ class Payment extends YijipayClient{
     public function genOrderNo() {
         return date("YmdHis") . rand(0000,9999);
     }
+
+
 }
