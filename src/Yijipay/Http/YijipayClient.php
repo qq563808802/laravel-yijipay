@@ -149,7 +149,7 @@ class YijipayClient {
 
 
 	protected function curl($url) {
-
+	
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_FAILONERROR, false);
@@ -157,12 +157,13 @@ class YijipayClient {
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
 		//POST 请求
-		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 
 		//设置header
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('content-type: application/x-www-form-urlencoded;charset=' . $this->postCharset));
 
 		$response = curl_exec($ch);
+	
 		if (curl_errno($ch)) {
 			throw new Exception(curl_error($ch), 0);
 		} else {
