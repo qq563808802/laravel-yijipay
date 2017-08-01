@@ -149,7 +149,7 @@ class YijipayClient {
 
 
 	protected function curl($url) {
-	
+
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_FAILONERROR, false);
@@ -157,18 +157,16 @@ class YijipayClient {
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
 		//POST 请求
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 
 		//设置header
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('content-type: application/x-www-form-urlencoded;charset=' . $this->postCharset));
 
 		$response = curl_exec($ch);
-	
 		if (curl_errno($ch)) {
 			throw new Exception(curl_error($ch), 0);
 		} else {
 			$httpStatusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
 			if (302 === $httpStatusCode){
 				$headers302 = curl_getinfo($ch);
 				$reUrl = parse_url($headers302['redirect_url']);
@@ -179,7 +177,7 @@ class YijipayClient {
 				return $headers302['redirect_url'];
 				//?直接跳转
 			}else if (200 !== $httpStatusCode) {
-				throw new Exception($response, $httpStatusCode);
+				throw new \Exception("易极付请求不成成功，状态：{$httpStatusCode} 返回信息：'" . $response . "'");
 			}
 		}
 		curl_close($ch);

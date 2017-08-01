@@ -8,7 +8,7 @@
 namespace Yijipay\Payment;
 use Yijipay\Yijipay\Http\YijipayClient;
 use Yijipay\Yijipay\Exceptions\Exception;
-use Yijipay\Yijipay\Util\SignHelper;
+use Yijipay\Yijipay\Util\Log;
 
 
 class Payment extends YijipayClient{
@@ -84,7 +84,10 @@ class Payment extends YijipayClient{
      * 回调
      */
     public function callback() {
+
         $request = request()->all();
+        Log::info('支付回调' . request()->getClientIp());
+        Log::info(var_export($request,true));
         if($this->verify($request) && request('success')=== "true" && request('fastPayStatus')==='FINISHED') {
             return $request;
         }else{

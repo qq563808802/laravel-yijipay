@@ -8,6 +8,7 @@
 namespace Yijipay\Transfer;
 use Yijipay\Yijipay\Http\YijipayClient;
 use Yijipay\Yijipay\Exceptions\Exception;
+use Yijipay\Yijipay\Util\Log;
 
 
 class Transfer extends YijipayClient{
@@ -99,6 +100,8 @@ class Transfer extends YijipayClient{
      */
     public function callback() {
         $request = request()->all();
+        Log::info('转款回调' . request()->getClientIp());
+        Log::info(var_export($request,true));
         if($this->verify($request) && request('success')=== "true") {
             return $request;
         }else{
